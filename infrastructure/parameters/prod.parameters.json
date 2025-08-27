@@ -1,0 +1,28 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "resourceGroupName": {
+      "value": "rg-holmes-cpu-validation-prod"
+    },
+    "location": {
+      "value": "eastus"
+    },
+    "environment": {
+      "value": "prod"
+    },
+    "projectPrefix": {
+      "value": "holmes"
+    },
+    "tags": {
+      "value": {
+        "project": "holmes-cpu-validation",
+        "environment": "prod",
+        "managedBy": "bicep",
+        "owner": "aikit-team",
+        "costCenter": "production",
+        "createdDate": "2024-01-27"
+      }
+    }
+  }
+}

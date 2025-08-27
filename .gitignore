@@ -1,0 +1,89 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# Results and reports (contain sensitive data)
+results/
+reports/
+outputs/
+
+# Model files
+models/
+*.gguf
+*.bin
+*.safetensors
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Azure
+*.tfstate
+*.tfstate.backup
+.terraform/
+*.plan
+
+# Credentials and secrets
+*.env
+.env.*
+*.key
+*.pem
+*.crt
+credentials.json
+kubeconfig
+azureauth.json
+
+# Logs
+*.log
+logs/
+
+# HolmesGPT repository (cloned separately)
+holmesgpt/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Documentation build
+docs/_build/
+site/
+
+# Node (if using any JS tools)
+node_modules/
+package-lock.json
+yarn.lock
