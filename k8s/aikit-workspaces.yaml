@@ -1,0 +1,255 @@
+# AIKit Workspaces for HolmesGPT CPU Model Evaluation
+# Deploy CPU-optimized models via Kaito for performance testing
+
+---
+apiVersion: kaito.sh/v1alpha1
+kind: Workspace
+metadata:
+  name: tinyllama-workspace
+  namespace: default
+  labels:
+    app: holmesgpt-eval
+    model: tinyllama
+    format: gguf
+spec:
+  resource:
+    instanceType: "Standard_D4as_v4"
+    labelSelector:
+      matchLabels:
+        node-pool: cpu-inference
+  inference:
+    preset:
+      name: "tinyllama"
+      # GGUF format with Q4_K_M quantization for CPU optimization
+    presetOptions:
+      modelFormat: "gguf"
+      quantization: "q4_k_m"
+      llamacppArgs: "--mmap --numa --threads 4"
+  tuning:
+    # CPU-optimized configuration with GGUF
+    method: "cpu-inference"
+    config:
+      max_seq_len: 2048
+      temperature: 0.7
+      top_p: 0.9
+      # GGUF-specific optimizations
+      use_mmap: true
+      use_mlock: false
+
+---
+apiVersion: kaito.sh/v1alpha1
+kind: Workspace
+metadata:
+  name: phi3-workspace
+  namespace: default
+  labels:
+    app: holmesgpt-eval
+    model: phi3
+spec:
+  resource:
+    instanceType: "Standard_D4as_v4"
+    labelSelector:
+      matchLabels:
+        node-pool: cpu-inference
+  inference:
+    preset:
+      name: "phi-3-mini-4k-instruct"
+      # AIKit supports multiple quantization levels
+  tuning:
+    method: "cpu-inference" 
+    config:
+      max_seq_len: 4096
+      temperature: 0.5
+      top_p: 0.95
+
+---
+# Alternative Phi-3 with different quantization for comparison
+apiVersion: kaito.sh/v1alpha1
+kind: Workspace
+metadata:
+  name: phi3-q5-workspace
+  namespace: default
+  labels:
+    app: holmesgpt-eval
+    model: phi3
+    quantization: q5km
+spec:
+  resource:
+    instanceType: "Standard_D4as_v4"
+    labelSelector:
+      matchLabels:
+        node-pool: cpu-inference
+  inference:
+    preset:
+      name: "phi-3-mini-4k-instruct"
+      # Request higher quality quantization
+    presetOptions:
+      quantization: "q5_k_m"
+  tuning:
+    method: "cpu-inference"
+    config:
+      max_seq_len: 4096
+      temperature: 0.5
+      top_p: 0.95
+
+---
+apiVersion: kaito.sh/v1alpha1
+kind: Workspace
+metadata:
+  name: code-llama-workspace
+  namespace: default
+  labels:
+    app: holmesgpt-eval
+    model: code-llama
+spec:
+  resource:
+    instanceType: "Standard_D4as_v4"
+    labelSelector:
+      matchLabels:
+        node-pool: cpu-inference
+  inference:
+    preset:
+      name: "code-llama-7b-instruct"
+      # Code-specialized model for technical diagnostics
+  tuning:
+    method: "cpu-inference"
+    config:
+      max_seq_len: 4096
+      temperature: 0.3
+      top_p: 0.95
+      # Lower temperature for more focused technical responses
+
+---
+# Code Llama with Q5_K_M quantization for comparison
+apiVersion: kaito.sh/v1alpha1
+kind: Workspace
+metadata:
+  name: code-llama-q5-workspace
+  namespace: default
+  labels:
+    app: holmesgpt-eval
+    model: code-llama
+    quantization: q5km
+spec:
+  resource:
+    instanceType: "Standard_D4as_v4"
+    labelSelector:
+      matchLabels:
+        node-pool: cpu-inference
+  inference:
+    preset:
+      name: "code-llama-7b-instruct"
+    presetOptions:
+      quantization: "q5_k_m"
+  tuning:
+    method: "cpu-inference"
+    config:
+      max_seq_len: 4096
+      temperature: 0.3
+      top_p: 0.95
+
+---
+# Code Llama with Q8_0 for maximum quality comparison
+apiVersion: kaito.sh/v1alpha1
+kind: Workspace
+metadata:
+  name: code-llama-q8-workspace
+  namespace: default
+  labels:
+    app: holmesgpt-eval
+    model: code-llama
+    quantization: q8_0
+spec:
+  resource:
+    instanceType: "Standard_D4as_v4"
+    labelSelector:
+      matchLabels:
+        node-pool: cpu-inference
+  inference:
+    preset:
+      name: "code-llama-7b-instruct"
+    presetOptions:
+      quantization: "q8_0"
+  tuning:
+    method: "cpu-inference"
+    config:
+      max_seq_len: 4096
+      temperature: 0.3
+      top_p: 0.95
+
+---
+# Service to expose inference endpoints
+apiVersion: v1
+kind: Service
+metadata:
+  name: aikit-inference-service
+  namespace: default
+  labels:
+    app: holmesgpt-eval
+spec:
+  selector:
+    app.kubernetes.io/name: workspace-inference
+  ports:
+  - name: http
+    port: 80
+    targetPort: 5000
+    protocol: TCP
+  type: ClusterIP
+
+---
+# ConfigMap for HolmesGPT to discover AIKit endpoints
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aikit-model-endpoints
+  namespace: default
+data:
+  models.yaml: |
+    # AIKit Model Endpoints for HolmesGPT Evaluation
+    # All models use GGUF format for efficient CPU inference
+    models:
+      - name: tinyllama-aikit
+        provider: aikit
+        endpoint: "http://tinyllama-workspace-inference.default.svc.cluster.local"
+        model_name: "tinyllama"
+        format: "gguf"
+        quantization: "q4_k_m"
+        parameters: "1.1B"
+        file_size: "637MB"
+        
+      - name: phi3-aikit
+        provider: aikit
+        endpoint: "http://phi3-workspace-inference.default.svc.cluster.local"
+        model_name: "phi-3-mini-4k-instruct"
+        format: "gguf"
+        quantization: "q4_k_m"
+        parameters: "3.8B"
+        file_size: "2.2GB"
+        
+      - name: phi3-q5-aikit
+        provider: aikit
+        endpoint: "http://phi3-q5-workspace-inference.default.svc.cluster.local"
+        model_name: "phi-3-mini-4k-instruct"
+        quantization: "q5_k_m"
+        parameters: "3.8B"
+        
+      - name: code-llama-aikit
+        provider: aikit
+        endpoint: "http://code-llama-workspace-inference.default.svc.cluster.local"
+        model_name: "code-llama-7b-instruct"
+        quantization: "q4_k_m"
+        parameters: "7B"
+        
+      - name: code-llama-q5-aikit
+        provider: aikit
+        endpoint: "http://code-llama-q5-workspace-inference.default.svc.cluster.local"
+        model_name: "code-llama-7b-instruct"
+        quantization: "q5_k_m"
+        parameters: "7B"
+        
+      - name: code-llama-q8-aikit
+        provider: aikit
+        endpoint: "http://code-llama-q8-workspace-inference.default.svc.cluster.local"
+        model_name: "code-llama-7b-instruct"
+        quantization: "q8_0"
+        parameters: "7B"
