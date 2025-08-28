@@ -45,4 +45,5 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2023-09
 output workspaceId string = logAnalyticsWorkspace.id
 output workspaceName string = logAnalyticsWorkspace.name
 output customerId string = logAnalyticsWorkspace.properties.customerId
-output primarySharedKey string = logAnalyticsWorkspace.listKeys().primarySharedKey
+// Note: Shared key available via Azure CLI: az monitor log-analytics workspace get-shared-keys -n <workspace-name>
+// output primarySharedKey string = logAnalyticsWorkspace.listKeys().primarySharedKey

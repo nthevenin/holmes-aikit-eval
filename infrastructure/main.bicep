@@ -5,11 +5,10 @@ targetScope = 'subscription'
 param resourceGroupName string
 
 @description('The location of the resource group')
-param location string = 'eastus'
+param location string = 'australiaeast'
 
 @description('Environment name')
-@allowed(['dev', 'staging', 'prod'])
-param environment string = 'dev'
+param environment string = 'evaluation'
 
 @description('Project prefix for resource naming')
 param projectPrefix string = 'holmes'
@@ -28,7 +27,7 @@ resource rg 'Microsoft.Resources/resourceGroups@2023-07-01' = {
   tags: tags
 }
 
-// Deploy AKS Cluster
+// Deploy AKS Cluster (minimal configuration)
 module aksCluster 'modules/aks.bicep' = {
   name: 'aks-deployment'
   scope: rg
@@ -37,29 +36,30 @@ module aksCluster 'modules/aks.bicep' = {
     location: location
     tags: tags
     nodeCount: 2
-    nodeVmSize: 'Standard_D4s_v3' // Cost-optimized for evaluation
+    nodeVmSize: 'Standard_D4as_v4' // AMD CPU optimized for evaluation
     environment: environment
+    logAnalyticsWorkspaceId: ''
   }
 }
 
-// Deploy Container Registry
-module containerRegistry 'modules/acr.bicep' = {
-  name: 'acr-deployment'
-  scope: rg
-  params: {
-    registryName: '${projectPrefix}acr${environment}${uniqueString(rg.id)}'
-    location: location
-    tags: tags
-    sku: 'Standard'
-  }
-}
+// Deploy Container Registry - temporarily disabled
+// module containerRegistry 'modules/acr.bicep' = {
+//   name: 'acr-deployment'
+//   scope: rg
+//   params: {
+//     registryName: '${projectPrefix}acr${uniqueString(rg.id)}'
+//     location: location
+//     tags: tags
+//     sku: 'Basic'
+//   }
+// }
 
 // Deploy Storage Account for test results and models
 module storageAccount 'modules/storage.bicep' = {
   name: 'storage-deployment'
   scope: rg
   params: {
-    storageAccountName: '${projectPrefix}stor${environment}${uniqueString(rg.id)}'
+    storageAccountName: '${projectPrefix}${uniqueString(rg.id)}'
     location: location
     tags: tags
     containerNames: [
@@ -86,8 +86,8 @@ module logAnalytics 'modules/log-analytics.bicep' = {
 output resourceGroupName string = rg.name
 output aksClusterName string = aksCluster.outputs.clusterName
 output aksClusterId string = aksCluster.outputs.clusterId
-output acrLoginServer string = containerRegistry.outputs.loginServer
-output acrName string = containerRegistry.outputs.registryName
+// output acrLoginServer string = containerRegistry.outputs.loginServer
+// output acrName string = containerRegistry.outputs.registryName
 output storageAccountName string = storageAccount.outputs.storageAccountName
-output storageAccountKey string = storageAccount.outputs.storageAccountKey
+// output storageAccountKey string = storageAccount.outputs.storageAccountKey
 output logAnalyticsWorkspaceId string = logAnalytics.outputs.workspaceId

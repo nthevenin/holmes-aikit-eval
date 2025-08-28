@@ -13,17 +13,20 @@ param tags object
 @maxValue(10)
 param nodeCount int = 3
 
-@description('VM size for nodes - CPU optimized for inference')
-param nodeVmSize string = 'Standard_D4s_v3'
+@description('VM size for nodes - AMD CPU optimized for inference')
+param nodeVmSize string = 'Standard_D4as_v4'
 
 @description('Environment name')
 param environment string
 
-@description('Kubernetes version')
-param kubernetesVersion string = '1.29'
+@description('Kubernetes version - leave empty for default')
+param kubernetesVersion string = ''
 
 @description('Enable monitoring')
-param enableMonitoring bool = true
+param enableMonitoring bool = false
+
+@description('Log Analytics workspace resource ID for monitoring')
+param logAnalyticsWorkspaceId string = ''
 
 // AKS Cluster
 resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-01-01' = {
@@ -34,16 +37,13 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-01-01' = {
     type: 'SystemAssigned'
   }
   properties: {
-    kubernetesVersion: kubernetesVersion
+    kubernetesVersion: kubernetesVersion != '' ? kubernetesVersion : null
     dnsPrefix: '${clusterName}-dns'
     
-    // Network configuration
+    // Network configuration - simplified
     networkProfile: {
-      networkPlugin: 'azure'
-      networkPolicy: 'azure'
+      networkPlugin: 'kubenet'
       loadBalancerSku: 'standard'
-      serviceCidr: '10.0.0.0/16'
-      dnsServiceIP: '10.0.0.10'
     }
     
     // Default node pool - CPU optimized for model inference
@@ -69,16 +69,8 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-01-01' = {
       }
     ]
     
-    // Enable addons
-    addonProfiles: enableMonitoring ? {
-      omsagent: {
-        enabled: true
-        config: {}
-      }
-      azurepolicy: {
-        enabled: true
-      }
-    } : {}
+    // Enable addons - minimal configuration
+    addonProfiles: {}
     
     // Auto-scaler configuration
     autoScalerProfile: {
@@ -101,24 +93,18 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-01-01' = {
       'skip-nodes-with-system-pods': 'true'
     }
     
-    // Security profile
-    securityProfile: {
-      defender: {
-        securityMonitoring: {
-          enabled: true
-        }
-      }
-    }
+    // Security profile - disabled for simplicity
+    // securityProfile: {}
   }
 }
 
-// Add a dedicated node pool for model inference workloads (optional - only deploy if needed)
-resource inferenceNodePool 'Microsoft.ContainerService/managedClusters/agentPools@2024-01-01' = if (nodeCount > 2) {
+// Add a dedicated node pool for model inference workloads (optional - temporarily disabled)
+resource inferenceNodePool 'Microsoft.ContainerService/managedClusters/agentPools@2024-01-01' = if (false) {
   parent: aksCluster
   name: 'inference'
   properties: {
     count: 1
-    vmSize: 'Standard_D8s_v3' // Reduced from D16s_v3
+    vmSize: 'Standard_D8as_v4' // AMD CPU for larger models
     osType: 'Linux'
     osSKU: 'Ubuntu'
     mode: 'User'

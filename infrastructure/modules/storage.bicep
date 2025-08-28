@@ -90,6 +90,7 @@ resource containers 'Microsoft.Storage/storageAccounts/blobServices/containers@2
 // Outputs
 output storageAccountId string = storageAccount.id
 output storageAccountName string = storageAccount.name
-output storageAccountKey string = storageAccount.listKeys().keys[0].value
+// Note: Storage keys available via Azure CLI: az storage account keys list -n <account-name>
+// output storageAccountKey string = storageAccount.listKeys().keys[0].value
 output primaryBlobEndpoint string = storageAccount.properties.primaryEndpoints.blob
-output connectionString string = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'
+// output connectionString string = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=core.windows.net'

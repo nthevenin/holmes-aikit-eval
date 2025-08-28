@@ -50,10 +50,10 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-11-01-pr
     // Data endpoint for improved performance
     dataEndpointEnabled: sku == 'Premium'
     
-    // Network rule set
-    networkRuleSet: {
+    // Network rule set - only available for Premium SKU
+    networkRuleSet: sku == 'Premium' ? {
       defaultAction: 'Allow'
-    }
+    } : null
     
     // Zone redundancy for Premium SKU
     zoneRedundancy: sku == 'Premium' ? 'Enabled' : 'Disabled'
@@ -64,5 +64,6 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-11-01-pr
 output registryId string = containerRegistry.id
 output registryName string = containerRegistry.name
 output loginServer string = containerRegistry.properties.loginServer
-output adminUsername string = adminUserEnabled ? containerRegistry.listCredentials().username : ''
-output adminPassword string = adminUserEnabled ? containerRegistry.listCredentials().passwords[0].value : ''
+// Note: Admin credentials available via Azure CLI: az acr credential show -n <registry-name>
+// output adminUsername string = adminUserEnabled ? containerRegistry.listCredentials().username : ''
+// output adminPassword string = adminUserEnabled ? containerRegistry.listCredentials().passwords[0].value : ''

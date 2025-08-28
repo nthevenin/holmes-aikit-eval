@@ -10,7 +10,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Default values
-LOCATION="eastus"
+LOCATION="australiaeast"
 SUBSCRIPTION=""
 DEPLOYMENT_NAME="holmes-cpu-evaluation-$(date +%Y%m%d-%H%M%S)"
 
@@ -78,14 +78,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Check if parameters file exists
-PARAMS_FILE="parameters.json"
+PARAMS_FILE="infrastructure/parameters.json"
 if [ ! -f "$PARAMS_FILE" ]; then
     print_message "$RED" "Error: Parameters file '$PARAMS_FILE' not found."
     exit 1
 fi
 
 # Check if main template exists
-TEMPLATE_FILE="main.bicep"
+TEMPLATE_FILE="infrastructure/main.bicep"
 if [ ! -f "$TEMPLATE_FILE" ]; then
     print_message "$RED" "Error: Main template file '$TEMPLATE_FILE' not found."
     exit 1
