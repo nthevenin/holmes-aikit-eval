@@ -1,0 +1,107 @@
+# Ollama CPU Models Deployment for HolmesGPT Evaluation
+# This deploys Ollama with CPU models in AKS for testing
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ollama-models-config
+  namespace: default
+data:
+  models.txt: |
+    tinyllama:latest
+    phi3:latest
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama-cpu-server
+  namespace: default
+  labels:
+    app: ollama-cpu-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ollama-cpu-server
+  template:
+    metadata:
+      labels:
+        app: ollama-cpu-server
+    spec:
+      containers:
+      - name: ollama
+        image: ollama/ollama:latest
+        ports:
+        - containerPort: 11434
+          name: http
+        env:
+        - name: OLLAMA_HOST
+          value: "0.0.0.0:11434"
+        - name: OLLAMA_ORIGINS
+          value: "*"
+        resources:
+          requests:
+            cpu: 1000m
+            memory: 2Gi
+          limits:
+            cpu: 4000m
+            memory: 8Gi
+        volumeMounts:
+        - name: ollama-data
+          mountPath: /root/.ollama
+        - name: models-config
+          mountPath: /etc/ollama
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - |
+                # Wait for Ollama to start
+                sleep 10
+                # Pull models in background
+                nohup sh -c '
+                  echo "Pulling TinyLlama..."
+                  ollama pull tinyllama:latest
+                  echo "Pulling Phi3..."  
+                  ollama pull phi3:latest
+                  echo "Models ready!"
+                ' > /var/log/model-setup.log 2>&1 &
+      volumes:
+      - name: ollama-data
+        emptyDir: {}
+      - name: models-config
+        configMap:
+          name: ollama-models-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama-cpu-service
+  namespace: default
+  labels:
+    app: ollama-cpu-server
+spec:
+  selector:
+    app: ollama-cpu-server
+  ports:
+  - name: http
+    port: 11434
+    targetPort: 11434
+    protocol: TCP
+  type: ClusterIP
+---
+# Headless service for direct pod access
+apiVersion: v1
+kind: Service  
+metadata:
+  name: ollama-cpu-headless
+  namespace: default
+spec:
+  clusterIP: None
+  selector:
+    app: ollama-cpu-server
+  ports:
+  - port: 11434
+    targetPort: 11434

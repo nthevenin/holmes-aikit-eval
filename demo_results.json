@@ -1,0 +1,161 @@
+{
+  "timestamp": "20250828_015000",
+  "config": {
+    "classifier_model": "gpt-4o",
+    "eval_types": ["easy", "medium"],
+    "iterations": {
+      "easy": 3,
+      "medium": 2
+    },
+    "models": [
+      {
+        "name": "tinyllama",
+        "provider": "ollama",
+        "quantization": "Q4_K_M",
+        "size": "1B"
+      },
+      {
+        "name": "phi3.5",
+        "provider": "ollama", 
+        "quantization": "Q4_K_M",
+        "size": "3.8B"
+      }
+    ]
+  },
+  "results": [
+    {
+      "model": "tinyllama_Q4_K_M",
+      "config": {
+        "name": "tinyllama",
+        "provider": "ollama",
+        "quantization": "Q4_K_M",
+        "size": "1B"
+      },
+      "endpoint": "http://localhost:11434",
+      "evaluations": {
+        "easy": {
+          "model": "tinyllama_Q4_K_M",
+          "eval_type": "easy",
+          "iterations": 3,
+          "total_time": 45.2,
+          "success": true,
+          "test_results": {
+            "tests": [
+              {"name": "test_pod_status", "outcome": "passed"},
+              {"name": "test_service_discovery", "outcome": "passed"},
+              {"name": "test_node_health", "outcome": "failed"},
+              {"name": "test_deployment_scale", "outcome": "passed"},
+              {"name": "test_log_analysis", "outcome": "failed"}
+            ]
+          }
+        },
+        "medium": {
+          "model": "tinyllama_Q4_K_M", 
+          "eval_type": "medium",
+          "iterations": 2,
+          "total_time": 78.5,
+          "success": true,
+          "test_results": {
+            "tests": [
+              {"name": "test_complex_networking", "outcome": "failed"},
+              {"name": "test_multi_service_debug", "outcome": "failed"},
+              {"name": "test_resource_optimization", "outcome": "failed"}
+            ]
+          }
+        }
+      },
+      "latency": {
+        "min": 1.2,
+        "max": 3.4,
+        "avg": 2.1,
+        "p50": 2.0,
+        "p90": 2.8,
+        "samples": 10
+      },
+      "resource_usage": {
+        "before": {
+          "cpu_percent": 15.2,
+          "memory_mb": 2048,
+          "timestamp": 1724806800
+        },
+        "after": {
+          "cpu_percent": 45.8,
+          "memory_mb": 3584,
+          "timestamp": 1724806923
+        },
+        "delta": {
+          "cpu_percent": 30.6,
+          "memory_mb": 1536,
+          "duration": 123
+        }
+      }
+    },
+    {
+      "model": "phi3.5_Q4_K_M",
+      "config": {
+        "name": "phi3.5",
+        "provider": "ollama",
+        "quantization": "Q4_K_M", 
+        "size": "3.8B"
+      },
+      "endpoint": "http://localhost:11434",
+      "evaluations": {
+        "easy": {
+          "model": "phi3.5_Q4_K_M",
+          "eval_type": "easy",
+          "iterations": 3,
+          "total_time": 52.1,
+          "success": true,
+          "test_results": {
+            "tests": [
+              {"name": "test_pod_status", "outcome": "passed"},
+              {"name": "test_service_discovery", "outcome": "passed"},
+              {"name": "test_node_health", "outcome": "passed"},
+              {"name": "test_deployment_scale", "outcome": "passed"},
+              {"name": "test_log_analysis", "outcome": "passed"}
+            ]
+          }
+        },
+        "medium": {
+          "model": "phi3.5_Q4_K_M",
+          "eval_type": "medium", 
+          "iterations": 2,
+          "total_time": 89.3,
+          "success": true,
+          "test_results": {
+            "tests": [
+              {"name": "test_complex_networking", "outcome": "passed"},
+              {"name": "test_multi_service_debug", "outcome": "failed"},
+              {"name": "test_resource_optimization", "outcome": "passed"}
+            ]
+          }
+        }
+      },
+      "latency": {
+        "min": 2.1,
+        "max": 4.2,
+        "avg": 3.1,
+        "p50": 3.0,
+        "p90": 3.8,
+        "samples": 10
+      },
+      "resource_usage": {
+        "before": {
+          "cpu_percent": 18.5,
+          "memory_mb": 2048,
+          "timestamp": 1724807200
+        },
+        "after": {
+          "cpu_percent": 65.2,
+          "memory_mb": 5120,
+          "timestamp": 1724807341
+        },
+        "delta": {
+          "cpu_percent": 46.7,
+          "memory_mb": 3072,
+          "duration": 141
+        }
+      }
+    }
+  ]
+}

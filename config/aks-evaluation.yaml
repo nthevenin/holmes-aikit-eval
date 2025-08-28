@@ -1,0 +1,56 @@
+# HolmesGPT CPU Model Evaluation Configuration for AKS
+# This configuration points to models running in the AKS cluster via Ollama
+
+# Results directory
+results_dir: results/aks
+
+# Classifier model for scoring (OpenAI or Azure)
+classifier_model: gpt-4o
+
+# Evaluation types to run
+eval_types:
+  - easy
+
+# Number of iterations per evaluation type  
+iterations:
+  easy: 2
+
+# Parallel workers for model evaluation
+parallel_workers: 1
+
+# Models deployed in AKS cluster
+models:
+  # TinyLlama running in AKS via Ollama
+  - name: tinyllama-aks
+    provider: ollama
+    endpoint: "http://ollama-cpu-service.default.svc.cluster.local:11434"
+    model_name: "tinyllama:latest" 
+    quantization: "Q4_K_M"
+    size: "1.1B"
+    description: "TinyLlama running on AKS CPU nodes"
+    
+  # Phi-3 running in AKS via Ollama  
+  - name: phi3-aks
+    provider: ollama
+    endpoint: "http://ollama-cpu-service.default.svc.cluster.local:11434"
+    model_name: "phi3:latest"
+    quantization: "Q4_K_M" 
+    size: "3.8B"
+    description: "Phi-3 running on AKS CPU nodes"
+
+# Test configurations
+test_config:
+  timeout: 180  # seconds per test (longer for cluster networking)
+  max_retries: 3
+  
+# Resource monitoring
+monitor_resources: true
+resource_check_interval: 10  # seconds
+
+# AKS cluster information
+cluster_info:
+  name: "holmes-aks-evaluation"
+  resource_group: "rg-holmes-cpu-evaluation" 
+  location: "australiaeast"
+  node_type: "Standard_D4as_v4"
+  node_count: 1

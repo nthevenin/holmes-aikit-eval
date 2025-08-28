@@ -55,16 +55,24 @@ class ModelEvaluator:
     
     def _setup_ollama(self, model_config: Dict) -> str:
         """Setup Ollama model and return endpoint"""
-        model_name = model_config['name']
-        quantization = model_config.get('quantization', 'Q4_K_M')
+        endpoint = model_config.get('endpoint', 'http://localhost:11434')
+        model_name = model_config.get('model_name', model_config['name'])
         
-        # Pull model if needed
-        logger.info(f"Setting up Ollama model: {model_name} ({quantization})")
-        subprocess.run(['ollama', 'pull', f"{model_name}:{quantization}"], check=True)
+        # For remote endpoints, just verify connectivity
+        logger.info(f"Using remote Ollama model: {model_name} at {endpoint}")
         
-        # Start Ollama server if not running
-        # Note: In production, this would be running in the K8s cluster
-        return "http://localhost:11434"
+        # Test connectivity
+        import requests
+        try:
+            response = requests.get(f"{endpoint}/api/tags", timeout=10)
+            if response.status_code == 200:
+                logger.info(f"✅ Connected to Ollama at {endpoint}")
+            else:
+                logger.warning(f"⚠️  Ollama connectivity test failed: {response.status_code}")
+        except Exception as e:
+            logger.warning(f"⚠️  Could not test Ollama connectivity: {e}")
+        
+        return endpoint
     
     def _setup_aikit(self, model_config: Dict) -> str:
         """Setup AIKit model and return endpoint"""
