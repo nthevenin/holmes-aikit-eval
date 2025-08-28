@@ -10,10 +10,9 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Default values
-ENVIRONMENT="dev"
 LOCATION="eastus"
 SUBSCRIPTION=""
-DEPLOYMENT_NAME="holmes-cpu-validation-$(date +%Y%m%d-%H%M%S)"
+DEPLOYMENT_NAME="holmes-cpu-evaluation-$(date +%Y%m%d-%H%M%S)"
 
 # Function to print colored output
 print_message() {
@@ -27,7 +26,6 @@ show_usage() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
     echo "Options:"
-    echo "  -e, --environment ENV    Environment to deploy (dev|staging|prod) [default: dev]"
     echo "  -s, --subscription SUB   Azure subscription ID or name"
     echo "  -l, --location LOC       Azure region [default: eastus]"
     echo "  -n, --name NAME          Deployment name [default: auto-generated]"
@@ -36,8 +34,8 @@ show_usage() {
     echo "  -h, --help               Show this help message"
     echo ""
     echo "Examples:"
-    echo "  $0 -e dev -s my-subscription"
-    echo "  $0 -e prod -s my-subscription -w"
+    echo "  $0 -s my-subscription"
+    echo "  $0 -s my-subscription -w"
     echo "  $0 -v"
 }
 
@@ -47,10 +45,6 @@ WHAT_IF=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -e|--environment)
-            ENVIRONMENT="$2"
-            shift 2
-            ;;
         -s|--subscription)
             SUBSCRIPTION="$2"
             shift 2
@@ -83,14 +77,8 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Validate environment
-if [[ ! "$ENVIRONMENT" =~ ^(dev|staging|prod)$ ]]; then
-    print_message "$RED" "Error: Invalid environment '$ENVIRONMENT'. Must be dev, staging, or prod."
-    exit 1
-fi
-
 # Check if parameters file exists
-PARAMS_FILE="parameters/${ENVIRONMENT}.parameters.json"
+PARAMS_FILE="parameters.json"
 if [ ! -f "$PARAMS_FILE" ]; then
     print_message "$RED" "Error: Parameters file '$PARAMS_FILE' not found."
     exit 1
@@ -103,8 +91,7 @@ if [ ! -f "$TEMPLATE_FILE" ]; then
     exit 1
 fi
 
-print_message "$GREEN" "=== HolmesGPT CPU Model Validation Infrastructure Deployment ==="
-print_message "$YELLOW" "Environment: $ENVIRONMENT"
+print_message "$GREEN" "=== HolmesGPT CPU Model Evaluation Infrastructure Deployment ==="
 print_message "$YELLOW" "Location: $LOCATION"
 print_message "$YELLOW" "Deployment Name: $DEPLOYMENT_NAME"
 
@@ -181,7 +168,7 @@ if [ $? -eq 0 ]; then
     echo "$DEPLOYMENT_OUTPUT" | jq -r '.properties.outputs | to_entries[] | "\(.key): \(.value.value)"'
     
     # Save outputs to file
-    OUTPUT_FILE="outputs/${ENVIRONMENT}-outputs.json"
+    OUTPUT_FILE="outputs/deployment-outputs.json"
     mkdir -p outputs
     echo "$DEPLOYMENT_OUTPUT" | jq '.properties.outputs' > "$OUTPUT_FILE"
     print_message "$GREEN" "Outputs saved to: $OUTPUT_FILE"

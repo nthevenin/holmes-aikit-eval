@@ -10,7 +10,6 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Default values
-ENVIRONMENT="dev"
 SUBSCRIPTION=""
 
 # Function to print colored output
@@ -25,22 +24,17 @@ show_usage() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
     echo "Options:"
-    echo "  -e, --environment ENV    Environment (dev|staging|prod) [default: dev]"
     echo "  -s, --subscription SUB   Azure subscription ID or name"
     echo "  -h, --help               Show this help message"
     echo ""
     echo "Examples:"
-    echo "  $0 -e dev -s my-subscription"
-    echo "  $0 -e prod"
+    echo "  $0 -s my-subscription"
+    echo "  $0"
 }
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        -e|--environment)
-            ENVIRONMENT="$2"
-            shift 2
-            ;;
         -s|--subscription)
             SUBSCRIPTION="$2"
             shift 2
@@ -57,18 +51,11 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Validate environment
-if [[ ! "$ENVIRONMENT" =~ ^(dev|staging|prod)$ ]]; then
-    print_message "$RED" "Error: Invalid environment '$ENVIRONMENT'. Must be dev, staging, or prod."
-    exit 1
-fi
-
-# Resource names based on environment
-RESOURCE_GROUP="rg-holmes-cpu-validation-${ENVIRONMENT}"
-CLUSTER_NAME="holmes-aks-${ENVIRONMENT}"
+# Resource names
+RESOURCE_GROUP="rg-holmes-cpu-evaluation"
+CLUSTER_NAME="holmes-aks-evaluation"
 
 print_message "$GREEN" "=== Connecting to HolmesGPT AKS Cluster ==="
-print_message "$YELLOW" "Environment: $ENVIRONMENT"
 print_message "$YELLOW" "Resource Group: $RESOURCE_GROUP"
 print_message "$YELLOW" "Cluster Name: $CLUSTER_NAME"
 

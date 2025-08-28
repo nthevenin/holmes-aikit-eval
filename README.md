@@ -42,11 +42,11 @@ cd ..
 # Make scripts executable
 chmod +x infrastructure/*.sh
 
-# Deploy development environment
-./infrastructure/deploy.sh -e dev -s <your-subscription>
+# Deploy infrastructure
+./infrastructure/deploy.sh -s <your-subscription>
 
 # Connect to AKS cluster
-./infrastructure/connect-aks.sh -e dev
+./infrastructure/connect-aks.sh
 ```
 
 ### 3. Setup Models
@@ -89,7 +89,7 @@ holmes-aikit-eval/
 ├── infrastructure/          # Azure Bicep templates and deployment scripts
 │   ├── main.bicep          # Main infrastructure template
 │   ├── modules/            # Bicep modules for individual resources
-│   ├── parameters/         # Environment-specific parameters
+│   ├── parameters.json     # Deployment parameters
 │   ├── deploy.sh           # Deployment script
 │   ├── cleanup.sh          # Cleanup script
 │   └── connect-aks.sh      # AKS connection script
@@ -170,21 +170,14 @@ Edit `infrastructure/parameters/*.json` to:
 
 ## 📈 Deployment Scenarios
 
-### Development Testing
+### Single Evaluation Environment
 ```bash
-./infrastructure/deploy.sh -e dev -s <subscription>
+./infrastructure/deploy.sh -s <subscription>
 ```
-- 3 nodes, auto-scaling
-- Standard_D8s_v3 instances
+- 2 nodes, auto-scaling (1-3)
+- Standard_D4s_v3 instances (cost-optimized)
 - 30-day log retention
-
-### Production Deployment
-```bash
-./infrastructure/deploy.sh -e prod -s <subscription>
-```
-- 5 nodes, auto-scaling
-- Standard_D16s_v3 instances
-- 90-day log retention
+- Optional inference node pool for larger models
 
 ## 🚨 Troubleshooting
 
