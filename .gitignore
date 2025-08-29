@@ -37,7 +37,6 @@ reports/
 outputs/
 
 # Model files
-models/
 *.gguf
 *.bin
 *.safetensors

@@ -1,0 +1,368 @@
+# AIKit Pre-made Models Deployment for HolmesGPT Evaluation
+# Using actual AIKit supported models from ghcr.io/kaito-project/aikit
+
+---
+# Small Models (1B-3B) - Fast inference, lower accuracy
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llama32-1b
+  labels:
+    app: aikit-model
+    model: llama32-1b
+    size: small
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llama32-1b
+  template:
+    metadata:
+      labels:
+        app: llama32-1b
+    spec:
+      containers:
+      - name: model
+        image: ghcr.io/kaito-project/aikit/llama3.2:1b
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 1000m
+            memory: 2Gi
+          limits:
+            cpu: 2000m
+            memory: 4Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llama32-1b-svc
+spec:
+  selector:
+    app: llama32-1b
+  ports:
+  - port: 8080
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llama32-3b
+  labels:
+    app: aikit-model
+    model: llama32-3b
+    size: small
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llama32-3b
+  template:
+    metadata:
+      labels:
+        app: llama32-3b
+    spec:
+      containers:
+      - name: model
+        image: ghcr.io/kaito-project/aikit/llama3.2:3b
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 1500m
+            memory: 4Gi
+          limits:
+            cpu: 3000m
+            memory: 6Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llama32-3b-svc
+spec:
+  selector:
+    app: llama32-3b
+  ports:
+  - port: 8080
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gemma2-2b
+  labels:
+    app: aikit-model
+    model: gemma2-2b
+    size: small
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gemma2-2b
+  template:
+    metadata:
+      labels:
+        app: gemma2-2b
+    spec:
+      containers:
+      - name: model
+        image: ghcr.io/kaito-project/aikit/gemma2:2b
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 1500m
+            memory: 3Gi
+          limits:
+            cpu: 2500m
+            memory: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gemma2-2b-svc
+spec:
+  selector:
+    app: gemma2-2b
+  ports:
+  - port: 8080
+    targetPort: 8080
+
+---
+# Medium Models (8B-14B) - Balanced performance
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llama31-8b
+  labels:
+    app: aikit-model
+    model: llama31-8b
+    size: medium
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llama31-8b
+  template:
+    metadata:
+      labels:
+        app: llama31-8b
+    spec:
+      containers:
+      - name: model
+        image: ghcr.io/kaito-project/aikit/llama3.1:8b
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 2000m
+            memory: 8Gi
+          limits:
+            cpu: 4000m
+            memory: 12Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: llama31-8b-svc
+spec:
+  selector:
+    app: llama31-8b
+  ports:
+  - port: 8080
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phi4-14b
+  labels:
+    app: aikit-model
+    model: phi4-14b
+    size: medium
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phi4-14b
+  template:
+    metadata:
+      labels:
+        app: phi4-14b
+    spec:
+      containers:
+      - name: model
+        image: ghcr.io/kaito-project/aikit/phi4:14b
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 2500m
+            memory: 10Gi
+          limits:
+            cpu: 4000m
+            memory: 14Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: phi4-14b-svc
+spec:
+  selector:
+    app: phi4-14b
+  ports:
+  - port: 8080
+    targetPort: 8080
+
+---
+# Large Models (20B+) - For comprehensive testing (may need larger nodes)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gpt-oss-20b
+  labels:
+    app: aikit-model
+    model: gpt-oss-20b
+    size: large
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gpt-oss-20b
+  template:
+    metadata:
+      labels:
+        app: gpt-oss-20b
+    spec:
+      containers:
+      - name: model
+        image: ghcr.io/kaito-project/aikit/gpt-oss:20b
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 3000m
+            memory: 12Gi
+          limits:
+            cpu: 4000m
+            memory: 16Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gpt-oss-20b-svc
+spec:
+  selector:
+    app: gpt-oss-20b
+  ports:
+  - port: 8080
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: codestral-22b
+  labels:
+    app: aikit-model
+    model: codestral-22b
+    size: large
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: codestral-22b
+  template:
+    metadata:
+      labels:
+        app: codestral-22b
+    spec:
+      containers:
+      - name: model
+        image: ghcr.io/kaito-project/aikit/codestral:22b
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 3000m
+            memory: 12Gi
+          limits:
+            cpu: 4000m
+            memory: 16Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: codestral-22b-svc
+spec:
+  selector:
+    app: codestral-22b
+  ports:
+  - port: 8080
+    targetPort: 8080
+
+---
+# ConfigMap with all model endpoints
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aikit-models-config
+  namespace: default
+data:
+  models.json: |
+    {
+      "models": [
+        {
+          "name": "llama-3.2-1b-instruct",
+          "endpoint": "http://llama32-1b-svc:8080",
+          "parameters": "1B",
+          "category": "small",
+          "license": "Llama"
+        },
+        {
+          "name": "llama-3.2-3b-instruct",
+          "endpoint": "http://llama32-3b-svc:8080",
+          "parameters": "3B",
+          "category": "small",
+          "license": "Llama"
+        },
+        {
+          "name": "gemma-2-2b-instruct",
+          "endpoint": "http://gemma2-2b-svc:8080",
+          "parameters": "2B",
+          "category": "small",
+          "license": "Gemma"
+        },
+        {
+          "name": "llama-3.1-8b-instruct",
+          "endpoint": "http://llama31-8b-svc:8080",
+          "parameters": "8B",
+          "category": "medium",
+          "license": "Llama"
+        },
+        {
+          "name": "phi-4-14b-instruct",
+          "endpoint": "http://phi4-14b-svc:8080",
+          "parameters": "14B",
+          "category": "medium",
+          "license": "MIT"
+        },
+        {
+          "name": "gpt-oss-20b",
+          "endpoint": "http://gpt-oss-20b-svc:8080",
+          "parameters": "20B",
+          "category": "large",
+          "license": "Apache 2.0"
+        },
+        {
+          "name": "codestral-22b",
+          "endpoint": "http://codestral-22b-svc:8080",
+          "parameters": "22B",
+          "category": "large",
+          "license": "MNLP"
+        }
+      ]
+    }

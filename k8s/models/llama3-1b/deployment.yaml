@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llama3-1b
+  labels:
+    app: llama3-1b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: llama3-1b
+  template:
+    metadata:
+      labels:
+        app: llama3-1b
+    spec:
+      containers:
+      - name: model
+        image: ghcr.io/kaito-project/aikit/llama3.2:1b
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: 1000m
+            memory: 2Gi
