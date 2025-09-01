@@ -48,7 +48,7 @@ fi
 export RUN_LIVE=true
 export MODEL="openai/llama-3.2-1b-instruct"
 export OPENAI_API_BASE="http://localhost:$PORT/v1"
-export OPENAI_API_KEY="fake-key"
+export OPENAI_API_KEY="not-needed"
 
 echo "🚀 Running HolmesGPT easy evaluations..."
 echo "   Model: llama-3.2-1b-instruct via AIKit"

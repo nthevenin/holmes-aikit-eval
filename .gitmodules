@@ -1,0 +1,3 @@
+[submodule "aikit"]
+	path = aikit
+	url = https://github.com/robert-cronin/aikit.git
