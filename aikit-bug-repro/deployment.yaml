@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aikit-llama3
+  labels:
+    app: aikit-llama3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aikit-llama3
+  template:
+    metadata:
+      labels:
+        app: aikit-llama3
+    spec:
+      containers:
+      - name: aikit-llama3
+        image: ghcr.io/kaito-project/aikit/llama3.1:8b
+        ports:
+        - containerPort: 8080
+          name: http
+        resources:
+          requests:
+            cpu: "1000m"
+            memory: "2Gi"
+          limits:
+            cpu: "2000m"
+            memory: "4Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aikit-service
+  labels:
+    app: aikit-llama3
+spec:
+  selector:
+    app: aikit-llama3
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  type: ClusterIP

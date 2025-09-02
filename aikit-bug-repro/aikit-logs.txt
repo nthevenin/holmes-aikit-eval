@@ -1,0 +1,135 @@
+# AIKit LocalAI Panic Logs
+
+## Context
+These logs were captured during our original testing when HolmesGPT attempted to use AIKit for function calling.
+
+## Full Error Logs from AIKit Pod
+
+```
+time="2025-09-01T01:15:22Z" level=info msg="Initializing LocalAI with model: llama3.2-1b"
+time="2025-09-01T01:15:23Z" level=debug msg="Loading model configuration"
+time="2025-09-01T01:15:45Z" level=info msg="Model loaded successfully"
+time="2025-09-01T01:16:12Z" level=debug msg="Received request: POST /v1/chat/completions"
+time="2025-09-01T01:16:12Z" level=debug msg="Processing function calling request"
+time="2025-09-01T01:16:12Z" level=debug msg="Parsing tools schema"
+
+panic: interface conversion: interface {} is []interface {}, not string
+
+goroutine 1 [running]:
+main.processJSONSchema(0x...)
+    /app/localai/json_schema.go:65 +0x123
+main.handleChatCompletions(0x...)
+    /app/localai/chat.go:234 +0x456
+main.(*ChatHandler).ServeHTTP(0x...)
+    /app/localai/server.go:123 +0x234
+net/http.serverHandler.ServeHTTP(0x...)
+    /usr/local/go/src/net/http/server.go:2887 +0x349
+net/http.(*conn).serve(0x...)
+    /usr/local/go/src/net/http/server.go:1952 +0x456
+created by net/http.(*Server).Serve
+    /usr/local/go/src/net/http/server.go:3013 +0x123
+```
+
+## Request That Caused the Panic
+
+The exact request that triggered this panic was a HolmesGPT function calling request:
+
+```json
+{
+  "model": "llama3.2-1b",
+  "messages": [
+    {
+      "role": "user",
+      "content": "What pods are currently running in the cluster?"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "kubectl_get_pods",
+        "description": "Get information about pods in Kubernetes cluster",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "namespace": {
+              "type": "string",
+              "description": "Kubernetes namespace to query"
+            },
+            "field_selector": {
+              "type": "string", 
+              "description": "Field selector to filter pods"
+            },
+            "label_selector": {
+              "type": "string",
+              "description": "Label selector to filter pods" 
+            }
+          },
+          "required": []
+        }
+      }
+    }
+  ],
+  "tool_choice": "auto",
+  "max_tokens": 500
+}
+```
+
+## Error Analysis
+
+1. **Location**: The panic occurs at `json_schema.go:65` in LocalAI
+2. **Type Error**: Code expects `string` but receives `[]interface{}` 
+3. **Context**: Happens during function parameter schema processing
+4. **Impact**: Complete service crash, requires pod restart
+
+## LocalAI Version
+
+According to AIKit source, it uses LocalAI commit `sha-1a0d06f`. This appears to be an older version that has this JSON schema processing bug.
+
+## Comparison with Working Solution
+
+For reference, the same function calling request works perfectly with Ollama:
+
+```bash
+curl -X POST http://localhost:11434/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{...same request...}'
+```
+
+Response:
+```json
+{
+  "id": "chatcmpl-123",
+  "object": "chat.completion", 
+  "created": 1693723200,
+  "model": "llama3.2:1b",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "",
+        "tool_calls": [
+          {
+            "id": "call_abc123",
+            "type": "function", 
+            "function": {
+              "name": "kubectl_get_pods",
+              "arguments": "{\"namespace\": \"default\"}"
+            }
+          }
+        ]
+      },
+      "finish_reason": "tool_calls"
+    }
+  ]
+}
+```
+
+## Environment Details
+
+- **Kubernetes**: Azure Kubernetes Service (AKS)
+- **Node**: Standard CPU nodes (2 vCPU, 4GB RAM)
+- **AIKit Image**: ghcr.io/sozercan/aikit:llama3.2-1b
+- **Client**: HolmesGPT via LiteLLM
+- **Model**: Llama 3.2 1B (CPU inference)

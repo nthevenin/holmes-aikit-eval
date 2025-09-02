@@ -1,0 +1,34 @@
+{
+  "model": "llama3.2:1b",
+  "messages": [
+    {
+      "role": "user", 
+      "content": "What pods are currently running in the cluster?"
+    }
+  ],
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "kubectl_get_pods",
+        "description": "Get information about pods in the Kubernetes cluster",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "namespace": {
+              "type": "string",
+              "description": "Kubernetes namespace to query"
+            },
+            "label_selector": {
+              "type": "string", 
+              "description": "Label selector to filter pods"
+            }
+          },
+          "required": []
+        }
+      }
+    }
+  ],
+  "tool_choice": "auto",
+  "max_tokens": 500
+}
