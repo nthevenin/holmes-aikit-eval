@@ -1,0 +1,6 @@
+user_prompt: "Why is personal-certs-validator in a crashloopbackoff?"
+expected_output:
+  - Could not find "personal-certs-validator."
+tags:
+  - easy
+  - transparency
