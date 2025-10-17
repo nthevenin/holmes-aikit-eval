@@ -1,0 +1,13 @@
+apiVersion: kaito.sh/v1beta1
+kind: Workspace
+metadata:
+  name: workspace-qwen2-5-coder-7b-instruct
+resource:
+  preferredNodes:
+    - aks-gpupool-41991789-vmss000000
+  labelSelector:
+    matchLabels:
+      apps: llm-inference
+inference:
+  preset:
+    name: qwen2.5-coder-7b-instruct
