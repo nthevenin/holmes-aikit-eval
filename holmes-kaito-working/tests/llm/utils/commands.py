@@ -1,0 +1,196 @@
+# type: ignore
+import logging
+import os
+import subprocess
+import sys
+import time
+from contextlib import contextmanager
+from typing import Dict, Optional
+from tests.llm.utils.test_case_utils import HolmesTestCase
+
+
+EVAL_SETUP_TIMEOUT = int(os.environ.get("EVAL_SETUP_TIMEOUT", "210"))
+
+
+def _truncate_script(script: str, max_lines: int = 10) -> str:
+    """Truncate long scripts for display in error messages."""
+    lines = script.strip().split("\n")
+    if len(lines) <= max_lines:
+        return script
+
+    # Show first 5 and last 3 lines
+    truncated = (
+        lines[:5]
+        + ["... (truncated - " + str(len(lines) - 8) + " lines) ..."]
+        + lines[-3:]
+    )
+    return "\n".join(truncated)
+
+
+class CommandResult:
+    def __init__(
+        self,
+        command: str,
+        test_case_id: str,
+        success: bool,
+        exit_code: int = None,
+        elapsed_time: float = 0,
+        error_type: str = None,
+        error_details: str = None,
+    ):
+        self.command = command
+        self.test_case_id = test_case_id
+        self.success = success
+        self.exit_code = exit_code
+        self.elapsed_time = elapsed_time
+        self.error_type = error_type  # 'timeout', 'failure', or None
+        self.error_details = error_details
+
+    @property
+    def exit_info(self) -> str:
+        """Get formatted exit information."""
+        return (
+            f"exit {self.exit_code}" if self.exit_code is not None else "no exit code"
+        )
+
+
+def _invoke_command(command: str, cwd: str, timeout: Optional[int] = None) -> str:
+    try:
+        actual_timeout = timeout if timeout is not None else EVAL_SETUP_TIMEOUT
+        logging.debug(f"Running `{command}` in {cwd} with timeout {actual_timeout}s")
+        result = subprocess.run(
+            command,
+            shell=True,
+            capture_output=True,
+            text=True,
+            check=True,
+            stdin=subprocess.DEVNULL,
+            cwd=cwd,
+            timeout=actual_timeout,
+        )
+
+        output = f"{result.stdout}\n{result.stderr}"
+        logging.debug(f"** `{command}`:\n{output}")
+        logging.debug(f"Ran `{command}` in {cwd} with exit code {result.returncode}")
+
+        # Show output if SHOW_SETUP_OUTPUT is set
+        if os.environ.get("SHOW_SETUP_OUTPUT", "").lower() in ("true", "1"):
+            if result.stdout:
+                sys.stderr.write(f"[SETUP OUTPUT] {result.stdout}\n")
+            if result.stderr:
+                sys.stderr.write(f"[SETUP STDERR] {result.stderr}\n")
+
+        return output
+    except subprocess.CalledProcessError as e:
+        truncated_command = _truncate_script(command)
+        message = f"Command `{truncated_command}` failed with return code {e.returncode}\nstdout:\n{e.stdout}\nstderr:\n{e.stderr}"
+        logging.error(message)
+        raise e
+
+
+def run_commands(
+    test_case: HolmesTestCase, commands_str: str, operation: str
+) -> CommandResult:
+    """Generic command runner for setup/cleanup operations."""
+    if not commands_str or os.environ.get("RUN_LIVE", "").strip().lower() not in (
+        "1",
+        "true",
+    ):
+        return CommandResult(
+            command=f"(no {operation} needed)",
+            test_case_id=test_case.id,
+            success=True,
+            elapsed_time=0,
+        )
+
+    start_time = time.time()
+    # Execute the entire script as a single command instead of splitting by lines
+    # This preserves multi-line bash constructs like if/then/else, for loops, etc.
+    script = commands_str.strip()
+
+    try:
+        # Execute the entire commands string as a single bash script
+        # Use per-test timeout if specified, otherwise use default
+        timeout = (
+            test_case.setup_timeout
+            if hasattr(test_case, "setup_timeout") and test_case.setup_timeout
+            else None
+        )
+        _invoke_command(command=script, cwd=test_case.folder, timeout=timeout)
+
+        elapsed_time = time.time() - start_time
+        return CommandResult(
+            command=f"{operation.capitalize()}: completed",
+            test_case_id=test_case.id,
+            success=True,
+            elapsed_time=elapsed_time,
+        )
+    except subprocess.CalledProcessError as e:
+        elapsed_time = time.time() - start_time
+        error_details = f"Exit code: {e.returncode}\n\nstderr:\n{e.stderr}\n\nstdout:\n{e.stdout}\n\nScript that failed:\n$ {_truncate_script(script)}"
+
+        return CommandResult(
+            command=f"{operation.capitalize()} failed at: {e.cmd}",
+            test_case_id=test_case.id,
+            success=False,
+            exit_code=e.returncode,
+            elapsed_time=elapsed_time,
+            error_type="failure",
+            error_details=error_details,
+        )
+    except subprocess.TimeoutExpired as e:
+        elapsed_time = time.time() - start_time
+        error_details = f"TIMEOUT after {e.timeout}s\n\nYou can increase timeout with environment variable EVAL_SETUP_TIMEOUT=<seconds> or by setting 'setup_timeout' in test_case.yaml\n\nScript that timed out:\n$ {_truncate_script(script)}"
+
+        return CommandResult(
+            command=f"{operation.capitalize()} timeout: {e.cmd}",
+            test_case_id=test_case.id,
+            success=False,
+            elapsed_time=elapsed_time,
+            error_type="timeout",
+            error_details=error_details,
+        )
+    except Exception as e:
+        elapsed_time = time.time() - start_time
+        error_details = f"$ {_truncate_script(script)}\nUnexpected error: {str(e)}"
+
+        return CommandResult(
+            command=f"{operation.capitalize()} failed",
+            test_case_id=test_case.id,
+            success=False,
+            elapsed_time=elapsed_time,
+            error_type="failure",
+            error_details=error_details,
+        )
+
+
+@contextmanager
+def set_test_env_vars(test_case: HolmesTestCase):
+    """Context manager to set and restore environment variables for test execution."""
+    if not test_case.test_env_vars:
+        yield
+        return
+
+    # Save current environment variable values
+    saved_env_vars: Dict[str, Optional[str]] = {}
+    for key in test_case.test_env_vars.keys():
+        saved_env_vars[key] = os.environ.get(key)
+
+    try:
+        # Set test environment variables
+        for key, value in test_case.test_env_vars.items():
+            # Expand environment variables in the value
+            expanded_value = os.path.expandvars(value)
+            os.environ[key] = expanded_value
+
+        yield
+    finally:
+        # Restore original environment variable values
+        for key, original_value in saved_env_vars.items():
+            if original_value is None:
+                # Variable didn't exist before, remove it
+                if key in os.environ:
+                    del os.environ[key]
+            else:
+                # Variable existed before, restore original value
+                os.environ[key] = original_value

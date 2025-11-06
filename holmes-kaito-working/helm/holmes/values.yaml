@@ -1,0 +1,60 @@
+certificate: "" # base64 encoded
+logLevel: INFO
+
+additionalEnvVars: []
+additional_env_vars: []
+imagePullSecrets: []
+podAnnotations: {}
+
+image: holmes:0.0.0
+registry: robustadev
+
+sentryDSN: https://51f9cd9bd2fdee16144db08fc423cd3b@o1120648.ingest.us.sentry.io/4508799804702720
+enableTelemetry: true
+
+enableAccountsCreate: true
+revisionHistoryLimit: 10
+
+createServiceAccount: true
+customServiceAccountName: ""
+
+customClusterRoleRules: []
+
+enablePostProcessing: false
+postProcessingPrompt: "builtin://generic_post_processing.jinja2"
+openshift: false
+
+affinity: {}
+nodeSelector: ~
+tolerations: []
+
+serviceAccount:
+  imagePullSecrets: []
+  annotations: {}
+
+toolsets:
+  kubernetes/core:
+    enabled: true
+  kubernetes/logs:
+    enabled: true
+  robusta:
+    enabled: true
+  internet:
+    enabled: true
+  prometheus/metrics:
+    enabled: true
+mcp_servers: {}
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 2048Mi
+  limits:
+    memory: 2048Mi
+
+additionalVolumes: []
+additionalVolumeMounts: []
+
+priorityClassName: ""
+
+modelList: {}
