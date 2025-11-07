@@ -165,9 +165,9 @@ class DefaultLLM(LLM):
         try:
             return litellm.model_cost[model_name]["max_input_tokens"]
         except Exception:
-            logging.warning(
-                f"Couldn't find model's name {model_name} in litellm's model list, fallback to 128k tokens for max_input_tokens"
-            )
+            # logging.warning(
+            #     f"Couldn't find model's name {model_name} in litellm's model list, fallback to 128k tokens for max_input_tokens"
+            # )
             return 128000
 
     @sentry_sdk.trace
@@ -264,9 +264,9 @@ class DefaultLLM(LLM):
         try:
             return litellm.model_cost[model_name]["max_output_tokens"]
         except Exception:
-            logging.warning(
-                f"Couldn't find model's name {model_name} in litellm's model list, fallback to 4096 tokens for max_output_tokens"
-            )
+            # logging.warning(
+            #     f"Couldn't find model's name {model_name} in litellm's model list, fallback to 4096 tokens for max_output_tokens"
+            # )
             return 4096
 
     def _add_cache_control_to_last_message(

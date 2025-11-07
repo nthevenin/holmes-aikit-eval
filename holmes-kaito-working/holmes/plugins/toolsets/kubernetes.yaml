@@ -23,11 +23,11 @@ toolsets:
         command: "kubectl get --show-labels -o wide {{ kind }} {{ name }}{% if namespace %} -n {{ namespace }}{% endif %}"
 
       - name: "kubectl_get_by_kind_in_namespace"
-        description: "Run `kubectl get <kind> -n <namespace> --show-labels` to get all resources of a given type in namespace"
+        description: "Run `kubectl get <kind> -n <namespace> --show-labels` to get all resources of a given type in a specific namespace. Use this when you want resources from one namespace only."
         command: "kubectl get --show-labels -o wide {{ kind }} -n {{namespace}}"
 
       - name: "kubectl_get_by_kind_in_cluster"
-        description: "Run `kubectl get -A <kind> --show-labels` to get all resources of a given type in the cluster"
+        description: "Run `kubectl get -A <kind> --show-labels` to get all resources of a given type across all namespaces in the cluster. Use this when you want resources from every namespace."
         command: "kubectl get -A --show-labels -o wide {{ kind }}"
 
       - name: "kubectl_find_resource"

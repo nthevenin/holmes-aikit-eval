@@ -462,9 +462,9 @@ class ToolCallingLLM:
 
             if text_response and text_response.strip():
                 logging.info(f"[bold {AI_COLOR}]AI:[/bold {AI_COLOR}] {text_response}")
-            logging.info(
-                f"The AI requested [bold]{len(tools_to_call) if tools_to_call else 0}[/bold] tool call(s)."
-            )
+            # logging.info(
+            #     f"The AI requested [bold]{len(tools_to_call) if tools_to_call else 0}[/bold] tool call(s)."
+            # )
             perf_timing.measure("pre-tool-calls")
             with concurrent.futures.ThreadPoolExecutor(max_workers=16) as executor:
                 futures = []
